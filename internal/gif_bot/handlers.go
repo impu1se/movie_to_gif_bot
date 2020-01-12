@@ -38,8 +38,8 @@ func (bot *GifBot) handlerVideo(update *tgbotapi.Update) {
 		bot.logger.Error(fmt.Sprintf("can't get file from chat id: %v, reason: %v", chatId, err))
 		if err := bot.NewMessage(chatId, "Не получилось загрузить видео, попробуйте позднее", nil); err != nil {
 			bot.logger.Error(fmt.Sprintf("can't send message, reason: %v", err))
-			return
 		}
+		return
 	}
 
 	err = bot.system.Download(fmt.Sprintf("%v/%v.mov", chatId, video.FileID),
@@ -56,7 +56,7 @@ func (bot *GifBot) handlerVideo(update *tgbotapi.Update) {
 		bot.logger.Error(fmt.Sprintf("can't clear time, reason %v", err))
 		return
 	}
-	if err := bot.NewMessage(chatId, "Видео успешно загружено, укажите начало и конец для создания gif", &Clear); err != nil {
+	if err := bot.NewMessage(chatId, "Видео успешно загружено, укажите с какой секунды начать делать gif", &Clear); err != nil {
 		bot.logger.Error(fmt.Sprintf("can't send message, reason: %v", err))
 		return
 	}
@@ -128,7 +128,7 @@ func (bot *GifBot) handleTimes(update *tgbotapi.Update) {
 			bot.logger.Error(fmt.Sprintf("can't update start time by chat id: %v, reason: %v", chatId, err))
 			return
 		}
-		if err := bot.NewMessage(chatId, "Ок теперь введите конец видео", nil); err != nil {
+		if err := bot.NewMessage(chatId, "Ок теперь введите секунду окончания видео", nil); err != nil {
 			bot.logger.Error(fmt.Sprintf("can't send message, reason: %v", err))
 			return
 		}
@@ -144,23 +144,25 @@ func (bot *GifBot) handleTimes(update *tgbotapi.Update) {
 			bot.logger.Error(fmt.Sprintf("can't update end time by chat id: %v, reason: %v", chatId, err))
 			return
 		}
-		user.EndTime = &time
-		for _, text := range []string{ //TODO: make from db
-			"Начало и конец получены, начинаем обработку...",
-			fmt.Sprintf("Ок старт: %v, конец: %v", *user.StartTime, time),
-			"Секунду идет обработка...",
-		} {
-			if err := bot.NewMessage(chatId, text, nil); err != nil {
-				bot.logger.Error(fmt.Sprintf("can't send message, reason: %v", err))
-				return
-			}
+		endTime := time - *user.StartTime
+		user.EndTime = &endTime
+		text, err := bot.db.GetText(bot.ctx, "create video")
+		if err != nil {
+			bot.logger.Error(fmt.Sprintf("can't get message from db %v", err))
+			return
 		}
-		err := bot.system.MakeImagesFromMovie(user)
+
+		if err := bot.NewMessage(chatId, fmt.Sprintf(text, *user.StartTime, time), nil); err != nil {
+			bot.logger.Error(fmt.Sprintf("can't send message, reason: %v", err))
+			return
+		}
+
+		err = bot.system.MakeImagesFromMovie(user)
 		if err != nil {
 			bot.logger.Error(fmt.Sprintf("can't make image from movie, reason: %v", err))
 			return
 		}
-		if err := bot.NewMessage(chatId, "Обработка видео завершена.../nНачалось создание gif...", nil); err != nil {
+		if err := bot.NewMessage(chatId, "Обработка видео завершена...\nНачалось создание gif...", nil); err != nil {
 			bot.logger.Error(fmt.Sprintf("can't send message, reason: %v", err))
 			return
 		}
@@ -171,7 +173,7 @@ func (bot *GifBot) handleTimes(update *tgbotapi.Update) {
 			bot.logger.Error(fmt.Sprintf("can't make gif from movie, reason: %v", err))
 			return
 		}
-		if err := bot.NewMessage(chatId, "Создание gif завершено/nЗагружаем gif в чат...", nil); err != nil {
+		if err := bot.NewMessage(chatId, "Создание gif завершено\nЗагружаем gif в чат...", &NewGif); err != nil {
 			bot.logger.Error(fmt.Sprintf("can't send message, reason: %v", err))
 			return
 		}

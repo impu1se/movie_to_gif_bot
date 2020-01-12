@@ -50,11 +50,6 @@ func (l *System) MakeGif(chatId int64, dest string) error {
 
 	path := fmt.Sprintf("%v/*.jpg", chatId)
 
-	if err := ClearDir(path); err != nil {
-		l.logger.Error(fmt.Sprintf("can't clear dir %v , err: %v", path, err))
-		return err
-	}
-
 	srcfilenames, err := filepath.Glob(path)
 	if err != nil {
 		l.logger.Error(fmt.Sprintf("error in globbing source file pattern %v : %v", path, err))
@@ -74,7 +69,7 @@ func (l *System) MakeGif(chatId int64, dest string) error {
 			continue
 		}
 
-		img = ScaleImage(0.35, img)
+		img = ScaleImage(0.4, img)
 
 		buf := bytes.Buffer{}
 		if err := gif.Encode(&buf, img, nil); err != nil {
@@ -93,7 +88,7 @@ func (l *System) MakeGif(chatId int64, dest string) error {
 
 	delays := make([]int, len(frames))
 	for j, _ := range delays {
-		delays[j] = 4
+		delays[j] = 3
 	}
 
 	opfile, err := os.Create(dest)
@@ -138,12 +133,21 @@ func (l *System) CreateNewDir(chatId int64) error {
 }
 
 func (l *System) MakeImagesFromMovie(user *User) error {
+
+	path := fmt.Sprintf("%v/*.jpg", user.ChatId)
+
+	if err := ClearDir(path); err != nil {
+		l.logger.Error(fmt.Sprintf("can't clear dir %v , err: %v", path, err))
+		return err
+	}
+
 	pwd, err := os.Getwd()
 	if err != nil {
 		return err
 	}
+
 	mplayer := exec.Command("mplayer", "-vo",
-		fmt.Sprintf("jpeg:outdir=%v/%v:quality=80", pwd, user.ChatId),
+		fmt.Sprintf("jpeg:outdir=%v/%v:quality=100", pwd, user.ChatId),
 		"-nosound", "-ss", fmt.Sprint(*user.StartTime), "-endpos", fmt.Sprint(*user.EndTime),
 		fmt.Sprintf("%v/%v.mov", user.ChatId, user.LastVideo))
 	mplayer.Stderr = os.Stderr
