@@ -4,3 +4,4 @@
 .*
 !.env
 dev.env
+user_data

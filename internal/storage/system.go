@@ -25,6 +25,10 @@ type System struct {
 }
 
 func NewLoader(logger *zap.Logger) *System {
+	err := os.Mkdir(dataDir, os.FileMode(0777))
+	if err != nil {
+		logger.Error("can't create data dir")
+	}
 	return &System{logger: logger}
 }
 
@@ -116,8 +120,8 @@ func ScaleImage(scale float64, img image.Image) image.Image {
 
 }
 
-func ClearDir(pattern string) error {
-	files, err := filepath.Glob(pattern)
+func (l *System) ClearDir(pattern string) error {
+	files, err := filepath.Glob(dataDir + pattern)
 	if err != nil {
 		return err
 	}
@@ -136,9 +140,9 @@ func (l *System) CreateNewDir(chatId int64) error {
 
 func (l *System) MakeImagesFromMovie(user *User) error {
 
-	path := fmt.Sprintf(dataDir+"%v/*.jpg", user.ChatId)
+	path := fmt.Sprintf("%v/*.jpg", user.ChatId)
 
-	if err := ClearDir(path); err != nil {
+	if err := l.ClearDir(path); err != nil {
 		l.logger.Error(fmt.Sprintf("can't clear dir %v , err: %v", path, err))
 		return err
 	}
@@ -149,7 +153,7 @@ func (l *System) MakeImagesFromMovie(user *User) error {
 	}
 
 	mplayer := exec.Command("mplayer", "-vo",
-		fmt.Sprintf("jpeg:outdir=%v/%v:quality=100", pwd, user.ChatId),
+		fmt.Sprintf("jpeg:outdir=%v/%v%v:quality=100", pwd, dataDir, user.ChatId),
 		"-nosound", "-ss", fmt.Sprint(*user.StartTime), "-endpos", fmt.Sprint(*user.EndTime),
 		fmt.Sprintf(dataDir+"%v/%v.mov", user.ChatId, user.LastVideo))
 	mplayer.Stderr = os.Stderr

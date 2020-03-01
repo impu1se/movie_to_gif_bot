@@ -17,6 +17,7 @@ type System interface {
 	CreateNewDir(chatId int64) error
 	MakeGif(chatId int64, dest string) error
 	MakeImagesFromMovie(user *storage.User) error
+	ClearDir(pattern string) error
 }
 
 type GifBot struct {

@@ -13,3 +13,12 @@ var NewGif = tgbotapi.NewReplyKeyboard(
 		tgbotapi.NewKeyboardButton("Новая Gif"),
 	),
 )
+
+var Else = tgbotapi.NewReplyKeyboard(
+	tgbotapi.NewKeyboardButtonRow(
+		tgbotapi.NewKeyboardButton("Gif из того же видео"),
+	),
+	tgbotapi.NewKeyboardButtonRow(
+		tgbotapi.NewKeyboardButton("Gif из нового видео"),
+	),
+)

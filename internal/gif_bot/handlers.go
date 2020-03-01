@@ -21,9 +21,9 @@ func (bot *GifBot) handlerCommands(update *tgbotapi.Update) {
 
 func (bot *GifBot) handlerMessages(update *tgbotapi.Update) {
 	switch update.Message.Text {
-	case "Новая Gif":
+	case "Gif из нового видео":
 		bot.handleNewGif(update)
-	case "Очистить время начала и конца":
+	case "Очистить время начала и конца", "Gif из того же видео":
 		bot.handleNewGif(update)
 	default:
 		bot.handleTimes(update)
@@ -33,7 +33,12 @@ func (bot *GifBot) handlerMessages(update *tgbotapi.Update) {
 func (bot *GifBot) handlerVideo(update *tgbotapi.Update) {
 	chatId := update.Message.Chat.ID
 
-	video, err := bot.api.GetFile(tgbotapi.FileConfig{update.Message.Video.FileID})
+	if err := bot.system.ClearDir(fmt.Sprintf("%v/*.mov", chatId)); err != nil {
+		bot.logger.Error("can't clear dir for new video")
+		return
+	}
+
+	video, err := bot.api.GetFile(tgbotapi.FileConfig{update.Message.Video.FileID}) // TODO: make check file size
 	if err != nil {
 		bot.logger.Error(fmt.Sprintf("can't get file from chat id: %v, reason: %v", chatId, err))
 		if err := bot.NewMessage(chatId, "download error", nil); err != nil {
@@ -106,8 +111,7 @@ func (bot *GifBot) handleTimes(update *tgbotapi.Update) {
 	time, err := strconv.Atoi(update.Message.Text)
 	if err != nil {
 		bot.logger.Error("can't parse time from message")
-		if err := bot.NewMessage(chatId,
-			"invalid message", nil); err != nil {
+		if err := bot.NewMessage(chatId, "invalid message", nil); err != nil {
 			bot.logger.Error(fmt.Sprintf("can't send message, reason: %v", err))
 		}
 		return
@@ -152,7 +156,7 @@ func (bot *GifBot) handleTimes(update *tgbotapi.Update) {
 			bot.logger.Error(fmt.Sprintf("can't make image from movie, reason: %v", err))
 			return
 		}
-		if err := bot.NewMessage(chatId, "start create gif", nil); err != nil {
+		if err := bot.NewMessage(chatId, "start create video", nil); err != nil {
 			bot.logger.Error(fmt.Sprintf("can't send message, reason: %v", err))
 			return
 		}
@@ -168,7 +172,8 @@ func (bot *GifBot) handleTimes(update *tgbotapi.Update) {
 			return
 		}
 
-		gif := tgbotapi.NewAnimationUpload(chatId, gifPath)
+		gif := tgbotapi.NewAnimationUpload(chatId, "user_data/"+gifPath) // TODO: make user_data from system
+		gif.ReplyMarkup = Else
 		if _, err := bot.api.Send(gif); err != nil {
 			bot.logger.Error(fmt.Sprintf("can't send message, reason: %v", err))
 			return
