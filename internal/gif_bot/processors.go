@@ -2,6 +2,7 @@ package gif_bot
 
 import (
 	"context"
+	"fmt"
 
 	"go.uber.org/zap"
 
@@ -73,7 +74,16 @@ func (bot *GifBot) Run() {
 	}
 }
 
-func (bot *GifBot) NewMessage(chatId int64, text string, button *tgbotapi.ReplyKeyboardMarkup) error {
+func (bot *GifBot) NewMessage(chatId int64, message string, button *tgbotapi.ReplyKeyboardMarkup) error {
+
+	if message == "" {
+		return nil
+	}
+	text, err := bot.db.GetText(bot.ctx, message)
+	if err != nil {
+		bot.logger.Error(fmt.Sprintf("can't get text from db for message: %v", message))
+		return err
+	}
 	msg := tgbotapi.NewMessage(chatId, text)
 	if button != nil {
 		msg.ReplyMarkup = button

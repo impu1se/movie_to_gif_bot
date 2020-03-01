@@ -33,7 +33,6 @@ func main() {
 	}
 
 	logger := zap.NewExample()
-
 	system := storage.NewLoader(logger)
 	gifBot := gif_bot.NewGifBot(config, botApi.ListenForWebhook("/"+botApi.Token), system, db, logger, *botApi, context.Background())
 

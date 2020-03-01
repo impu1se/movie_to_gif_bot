@@ -18,6 +18,8 @@ import (
 	"github.com/disintegration/imaging"
 )
 
+const dataDir = "user_data/"
+
 type System struct {
 	logger *zap.Logger
 }
@@ -34,7 +36,7 @@ func (l *System) Download(filepath, url string) error {
 	}
 	defer resp.Body.Close()
 
-	out, err := os.Create(filepath)
+	out, err := os.Create(dataDir + filepath)
 	if err != nil {
 		return err
 	}
@@ -48,7 +50,7 @@ func (l *System) Download(filepath, url string) error {
 
 func (l *System) MakeGif(chatId int64, dest string) error {
 
-	path := fmt.Sprintf("%v/*.jpg", chatId)
+	path := fmt.Sprintf(dataDir+"%v/*.jpg", chatId)
 
 	srcfilenames, err := filepath.Glob(path)
 	if err != nil {
@@ -91,7 +93,7 @@ func (l *System) MakeGif(chatId int64, dest string) error {
 		delays[j] = 3
 	}
 
-	opfile, err := os.Create(dest)
+	opfile, err := os.Create(dataDir + dest)
 	if err != nil {
 		log.Fatalf("Error creating the destination file %s : %s", dest, err)
 	}
@@ -129,12 +131,12 @@ func ClearDir(pattern string) error {
 }
 
 func (l *System) CreateNewDir(chatId int64) error {
-	return os.Mkdir(fmt.Sprint(chatId), os.FileMode(0777))
+	return os.Mkdir(dataDir+fmt.Sprint(chatId), os.FileMode(0777))
 }
 
 func (l *System) MakeImagesFromMovie(user *User) error {
 
-	path := fmt.Sprintf("%v/*.jpg", user.ChatId)
+	path := fmt.Sprintf(dataDir+"%v/*.jpg", user.ChatId)
 
 	if err := ClearDir(path); err != nil {
 		l.logger.Error(fmt.Sprintf("can't clear dir %v , err: %v", path, err))
@@ -149,7 +151,7 @@ func (l *System) MakeImagesFromMovie(user *User) error {
 	mplayer := exec.Command("mplayer", "-vo",
 		fmt.Sprintf("jpeg:outdir=%v/%v:quality=100", pwd, user.ChatId),
 		"-nosound", "-ss", fmt.Sprint(*user.StartTime), "-endpos", fmt.Sprint(*user.EndTime),
-		fmt.Sprintf("%v/%v.mov", user.ChatId, user.LastVideo))
+		fmt.Sprintf(dataDir+"%v/%v.mov", user.ChatId, user.LastVideo))
 	mplayer.Stderr = os.Stderr
 	mplayer.Stdout = os.Stdout
 	return mplayer.Run()
