@@ -16,15 +16,16 @@ import (
 func main() {
 
 	config := configs.NewConfig()
-	if config.Tls {
-		go http.ListenAndServeTLS(":"+config.Port, config.CertFile, config.KeyFile, nil)
-	} else {
-		go http.ListenAndServe(":"+config.Port, nil)
-	}
 
 	botApi, err := botapi.NewBotApi(config)
 	if err != nil {
 		log.Fatalf("can't get new bot api, reason: %v", err)
+	}
+
+	if config.Tls {
+		go http.ListenAndServeTLS(":"+config.Port, config.CertFile, config.KeyFile, nil)
+	} else {
+		go http.ListenAndServe(":"+config.Port, nil)
 	}
 
 	db, err := storage.NewDb(config)
