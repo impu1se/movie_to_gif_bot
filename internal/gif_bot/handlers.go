@@ -21,9 +21,9 @@ func (bot *GifBot) handlerCommands(update *tgbotapi.Update) {
 
 func (bot *GifBot) handlerMessages(update *tgbotapi.Update) {
 	switch update.Message.Text {
-	case "Gif из нового видео":
+	case newGif:
 		bot.handleNewGif(update)
-	case "Очистить время начала и конца", "Gif из того же видео":
+	case clearTimes, oldGif:
 		bot.handleNewGif(update)
 	default:
 		bot.handleTimes(update)
