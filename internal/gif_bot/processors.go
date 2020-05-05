@@ -51,9 +51,7 @@ func NewGifBot(
 }
 
 func (bot *GifBot) Run() {
-	bot.logger.Info("in run...")
 	for update := range bot.Updates {
-		bot.logger.Info("got update...")
 		if update.Message == nil {
 			continue
 		}

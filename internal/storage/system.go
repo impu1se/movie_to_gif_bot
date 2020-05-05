@@ -152,7 +152,7 @@ func (l *System) MakeImagesFromMovie(user *User) error {
 		return err
 	}
 
-	mplayer := exec.Command("mplayer", "-vo",
+	mplayer := exec.Command("/usr/bin/mplayer", "-vo",
 		fmt.Sprintf("jpeg:outdir=%v/%v%v:quality=100", pwd, dataDir, user.ChatId),
 		"-nosound", "-ss", fmt.Sprint(*user.StartTime), "-endpos", fmt.Sprint(*user.EndTime),
 		fmt.Sprintf(dataDir+"%v/%v.mov", user.ChatId, user.LastVideo))
